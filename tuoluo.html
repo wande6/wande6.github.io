@@ -348,7 +348,7 @@ footer {
                 return;
             }
             // 陀螺仪事件处理函数
-            const handleOrientation = (event) = > {
+            const handleOrientation = (event) => {
                 // 获取陀螺仪数据（兼容性处理）
                 const alpha = typeof event.alpha === 'number' ? event.alpha : 0;
                 const beta = typeof event.beta === 'number' ? event.beta : 0;
@@ -371,7 +371,7 @@ footer {
                 updateCubeRotation(beta, gamma, alpha);
             };
             // 更新3D立方体旋转
-            const updateCubeRotation = (beta, gamma, alpha) = > {
+            const updateCubeRotation = (beta, gamma, alpha) => {
                 // 调整旋转方向使其更符合直觉
                 const rotateX = beta; // X轴对应前后倾斜
                 const rotateY = gamma; // Y轴对应左右倾斜
@@ -392,7 +392,7 @@ footer {
                     deg)`;
             };
             // 启动陀螺仪监控
-            const startMonitoring = () = > {
+            const startMonitoring = () => {
                 if (isMonitoring) return;
                 window.addEventListener('deviceorientation', handleOrientation);
                 isMonitoring = true;
@@ -403,7 +403,7 @@ footer {
                 startBtn.disabled = true;
             };
             // 停止并重置
-            const resetMonitoring = () = > {
+            const resetMonitoring = () => {
                 if (isMonitoring) {
                     window.removeEventListener('deviceorientation', handleOrientation);
                     isMonitoring = false;
@@ -424,17 +424,17 @@ footer {
             startBtn.addEventListener('click', startMonitoring);
             resetBtn.addEventListener('click', resetMonitoring);
             // 权限请求优化（某些浏览器需要用户交互后才允许访问传感器）
-            startBtn.addEventListener('click', () = > {
+            startBtn.addEventListener('click', () => {
                 // 额外检查iOS设备上的权限状态
                 if (typeof DeviceOrientationEvent.requestPermission === 'function') {
-                    DeviceOrientationEvent.requestPermission().then(permissionState = > {
+                    DeviceOrientationEvent.requestPermission().then(permissionState => {
                         if (permissionState === 'granted') {
                             startMonitoring();
                         } else {
                             statusEl.textContent = '❌ 用户拒绝了陀螺仪访问权限';
                         }
                     }).
-                    catch (err = > {
+                    catch (err => {
                         console.error('请求陀螺仪权限失败:', err);
                         statusEl.textContent = '❌ 权限请求失败 - 请检查浏览器设置';
                     });
