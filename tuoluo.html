@@ -1,0 +1,449 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>手机陀螺仪数据实时监测</title>
+    <style>
+        * {
+    margin: 0;
+    padding: 0;
+    box-sizing: border-box;
+    font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+}
+
+body {
+    background: linear-gradient(135deg, #1a2a6c, #2c3e50);
+    color: white;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+.container {
+    max-width: 800px;
+    margin: 0 auto;
+}
+
+header {
+    text-align: center;
+    margin-bottom: 30px;
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 15px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+h1 {
+    font-size: 2.2rem;
+    margin-bottom: 10px;
+    text-shadow: 0 2px 4px rgba(0, 0, 0, 0.5);
+}
+
+.subtitle {
+    color: #a0d2eb;
+    font-size: 1.1rem;
+}
+
+.data-display {
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border-radius: 15px;
+    padding: 25px;
+    margin-bottom: 25px;
+    box-shadow: 0 8px 32px rgba(0, 0, 0, 0.3);
+}
+
+.data-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 0;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.data-row:last-child {
+    border-bottom: none;
+}
+
+.data-label {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    font-size: 1.2rem;
+}
+
+.axis-indicator {
+    width: 24px;
+    height: 24px;
+    border-radius: 50%;
+    display: inline-block;
+}
+
+.axis-x {
+    background: #ff6b6b;
+}   /* Red for X-axis */
+.axis-y {
+    background: #4cd97b;
+}   /* Green for Y-axis */
+.axis-z {
+    background: #4da6ff;
+}   /* Blue for Z-axis */
+.data-value {
+    font-size: 1.5rem;
+    font-weight: bold;
+    font-family: monospace;
+    background: rgba(0, 0, 0, 0.4);
+    padding: 8px 15px;
+    border-radius: 10px;
+    min-width: 120px;
+    text-align: center;
+}
+
+.visualization {
+    background: rgba(255, 255, 255, 0.05);
+    height: 300px;
+    border-radius: 15px;
+    margin: 25px 0;
+    position: relative;
+    overflow: hidden;
+    box-shadow: inset 0 0 20px rgba(0, 0, 0, 0.5);
+}
+
+.cube {
+    width: 150px;
+    height: 150px;
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform-style: preserve-3d;
+    transform: translate(-50%, -50%) rotateX(0deg) rotateY(0deg) rotateZ(0deg);
+    transition: transform 0.1s ease-out;
+}
+
+.face {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    font-size: 2rem;
+    font-weight: bold;
+    opacity: 0.8;
+    border: 2px solid rgba(255, 255, 255, 0.7);
+}
+
+.front {
+    transform: translateZ(75px);
+    background: rgba(255, 107, 107, 0.6);
+}
+
+.back {
+    transform: rotateY(180deg) translateZ(75px);
+    background: rgba(77, 166, 255, 0.6);
+}
+
+.right {
+    transform: rotateY(90deg) translateZ(75px);
+    background: rgba(76, 217, 123, 0.6);
+}
+
+.left {
+    transform: rotateY(-90deg) translateZ(75px);
+    background: rgba(255, 206, 86, 0.6);
+}
+
+.top {
+    transform: rotateX(90deg) translateZ(75px);
+    background: rgba(153, 102, 255, 0.6);
+}
+
+.bottom {
+    transform: rotateX(-90deg) translateZ(75px);
+    background: rgba(255, 153, 204, 0.6);
+}
+
+.controls {
+    display: flex;
+    gap: 15px;
+    flex-wrap: wrap;
+}
+
+button {
+    flex: 1;
+    padding: 16px;
+    border: none;
+    border-radius: 12px;
+    font-size: 1.1rem;
+    font-weight: bold;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    min-width: 180px;
+}
+
+#startBtn {
+    background: linear-gradient(to right, #4cd97b, #2ecc71);
+    color: white;
+}
+
+#resetBtn {
+    background: linear-gradient(to right, #4da6ff, #3498db);
+    color: white;
+}
+
+button:hover {
+    transform: translateY(-3px);
+    box-shadow: 0 7px 14px rgba(0, 0, 0, 0.4);
+}
+
+button:active {
+    transform: translateY(1px);
+}
+
+button:disabled {
+    opacity: 0.6;
+    transform: none;
+    cursor: not-allowed;
+}
+
+.status {
+    text-align: center;
+    margin-top: 20px;
+    padding: 15px;
+    border-radius: 12px;
+    font-size: 1.1rem;
+}
+
+.status-active {
+    background: rgba(46, 204, 113, 0.2);
+    color: #2ecc71;
+}
+
+.status-inactive {
+    background: rgba(231, 76, 60, 0.2);
+    color: #e74c3c;
+}
+
+.instructions {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 20px;
+    border-radius: 15px;
+    margin-top: 30px;
+    font-size: 0.95rem;
+    line-height: 1.6;
+}
+
+.instructions ul {
+    margin: 15px 0;
+    padding-left: 25px;
+}
+
+.instructions li {
+    margin-bottom: 10px;
+}
+
+footer {
+    text-align: center;
+    margin-top: 30px;
+    color: #a0d2eb;
+    font-size: 0.9rem;
+}
+
+@media (max-width: 600px) {
+    .controls {
+        flex-direction: column;
+    }
+
+    button {
+        min-width: 100%;
+    }
+
+    h1 {
+        font-size: 1.8rem;
+    }
+}
+    </style>
+</head>
+
+<body>
+    <div class="container">
+        <header>
+            <h1>📱 手机陀螺仪数据监测器</h1>
+            <p class="subtitle">基于HTML5 DeviceOrientation API | 实时3D可视化</p>
+        </header>
+        <section class="data-display">
+            <div class="data-row">
+                <div class="data-label"> <span class="axis-indicator axis-z"></span>
+                    <span>Alpha (Z轴旋转):</span>
+                </div>
+                <div class="data-value" id="alpha">0.000°</div>
+            </div>
+            <div class="data-row">
+                <div class="data-label"> <span class="axis-indicator axis-x"></span>
+                    <span>Beta (X轴倾斜):</span>
+                </div>
+                <div class="data-value" id="beta">0.000°</div>
+            </div>
+            <div class="data-row">
+                <div class="data-label"> <span class="axis-indicator axis-y"></span>
+                    <span>Gamma (Y轴旋转):</span>
+                </div>
+                <div class="data-value" id="gamma">0.000°</div>
+            </div>
+        </section>
+        <section class="visualization">
+            <div class="cube" id="cube">
+                <div class="face front">前</div>
+                <div class="face back">后</div>
+                <div class="face right">右</div>
+                <div class="face left">左</div>
+                <div class="face top">上</div>
+                <div class="face bottom">下</div>
+            </div>
+        </section>
+        <div class="controls">
+            <button id="startBtn">启动陀螺仪监测</button>
+            <button id="resetBtn">重置数据</button>
+        </div>
+        <div class="status status-inactive" id="status">❌ 陀螺仪监测未启动 - 点击上方按钮开始</div>
+        <section class="instructions">
+            <h3>使用说明：</h3>
+            <ul>
+                <li>此功能需要手机配备陀螺仪传感器（大多数现代智能手机均支持）[1,6](@ref)</li>
+                <li>首次使用需授权浏览器访问设备运动传感器（通常会自动弹出权限请求）</li>
+                <li><strong>Alpha</strong>: 设备绕垂直轴（Z轴）旋转角度（指南针方向，0°-360°）</li>
+                <li><strong>Beta</strong>: 设备前后倾斜角度（X轴，-180°~180°）</li>
+                <li><strong>Gamma</strong>: 设备左右倾斜角度（Y轴，-90°~90°）[7](@ref)</li>
+                <li>3D立方体将实时反映设备在空间中的旋转状态</li>
+                <li>在iOS设备上需使用Safari，Android设备推荐使用Chrome或Edge</li>
+                <li>此页面需通过HTTPS访问（本地localhost除外）[1](@ref)</li>
+            </ul>
+        </section>
+        <footer>
+            <p>© 2025 陀螺仪监测器 | 基于HTML5 DeviceOrientation API</p>
+        </footer>
+    </div>
+    <script>
+        document.addEventListener('DOMContentLoaded', () = > {
+            // DOM元素引用
+            const alphaEl = document.getElementById('alpha');
+            const betaEl = document.getElementById('beta');
+            const gammaEl = document.getElementById('gamma');
+            const cubeEl = document.getElementById('cube');
+            const startBtn = document.getElementById('startBtn');
+            const resetBtn = document.getElementById('resetBtn');
+            const statusEl = document.getElementById('status');
+            // 状态变量
+            let isMonitoring = false;
+            let lastAlpha = 0;
+            let lastBeta = 0;
+            let lastGamma = 0;
+            // 检查浏览器支持情况
+            const isSupported = !! window.DeviceOrientationEvent;
+            if (!isSupported) {
+                statusEl.textContent = '❌ 您的浏览器不支持DeviceOrientation API';
+                statusEl.className = 'status status-inactive';
+                startBtn.disabled = true;
+                return;
+            }
+            // 陀螺仪事件处理函数
+            const handleOrientation = (event) = > {
+                // 获取陀螺仪数据（兼容性处理）
+                const alpha = typeof event.alpha === 'number' ? event.alpha : 0;
+                const beta = typeof event.beta === 'number' ? event.beta : 0;
+                const gamma = typeof event.gamma === 'number' ? event.gamma : 0;
+                // 更新显示数据
+                alphaEl.textContent = `$ {
+                    alpha.toFixed(3)
+                }°`;
+                betaEl.textContent = `$ {
+                    beta.toFixed(3)
+                }°`;
+                gammaEl.textContent = `$ {
+                    gamma.toFixed(3)
+                }°`;
+                // 保存最新数据
+                lastAlpha = alpha;
+                lastBeta = beta;
+                lastGamma = gamma;
+                // 更新3D立方体
+                updateCubeRotation(beta, gamma, alpha);
+            };
+            // 更新3D立方体旋转
+            const updateCubeRotation = (beta, gamma, alpha) = > {
+                // 调整旋转方向使其更符合直觉
+                const rotateX = beta; // X轴对应前后倾斜
+                const rotateY = gamma; // Y轴对应左右倾斜
+                const rotateZ = -alpha; // Z轴反向旋转（更符合视觉习惯）
+                // 应用3D变换
+                cubeEl.style.transform = `translate(-50 % , -50 % )
+                rotateX($ {
+                        rotateX
+                    }
+                    deg)
+                rotateY($ {
+                        rotateY
+                    }
+                    deg)
+                rotateZ($ {
+                        rotateZ
+                    }
+                    deg)`;
+            };
+            // 启动陀螺仪监控
+            const startMonitoring = () = > {
+                if (isMonitoring) return;
+                window.addEventListener('deviceorientation', handleOrientation);
+                isMonitoring = true;
+                // 更新UI状态
+                statusEl.textContent = '✅ 陀螺仪监测中 - 请移动您的设备';
+                statusEl.className = 'status status-active';
+                startBtn.textContent = '监测中...';
+                startBtn.disabled = true;
+            };
+            // 停止并重置
+            const resetMonitoring = () = > {
+                if (isMonitoring) {
+                    window.removeEventListener('deviceorientation', handleOrientation);
+                    isMonitoring = false;
+                }
+                // 重置数据
+                alphaEl.textContent = '0.000°';
+                betaEl.textContent = '0.000°';
+                gammaEl.textContent = '0.000°';
+                // 重置立方体
+                cubeEl.style.transform = 'translate(-50%, -50%) rotateX(0deg) rotateY(0deg) rotateZ(0deg)';
+                // 更新UI状态
+                statusEl.textContent = '❌ 陀螺仪监测未启动 - 点击上方按钮开始';
+                statusEl.className = 'status status-inactive';
+                startBtn.textContent = '启动陀螺仪监测';
+                startBtn.disabled = false;
+            };
+            // 按钮事件监听
+            startBtn.addEventListener('click', startMonitoring);
+            resetBtn.addEventListener('click', resetMonitoring);
+            // 权限请求优化（某些浏览器需要用户交互后才允许访问传感器）
+            startBtn.addEventListener('click', () = > {
+                // 额外检查iOS设备上的权限状态
+                if (typeof DeviceOrientationEvent.requestPermission === 'function') {
+                    DeviceOrientationEvent.requestPermission().then(permissionState = > {
+                        if (permissionState === 'granted') {
+                            startMonitoring();
+                        } else {
+                            statusEl.textContent = '❌ 用户拒绝了陀螺仪访问权限';
+                        }
+                    }).
+                    catch (err = > {
+                        console.error('请求陀螺仪权限失败:', err);
+                        statusEl.textContent = '❌ 权限请求失败 - 请检查浏览器设置';
+                    });
+                } else {
+                    startMonitoring();
+                }
+            });
+        });
+    </script>
+</body>
+
+</html>
